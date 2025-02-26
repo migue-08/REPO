@@ -1,0 +1,44 @@
+[
+  {
+    "objectID": "REPO_rate.html",
+    "href": "REPO_rate.html",
+    "title": "REPO_rate",
+    "section": "",
+    "text": "The purpose of this document is to present the process of creating the plot that shows the evolution of the repo rate of the central bank of Colombia: Banco de la República. The information is made public by this institution and you can replicate this exercise downloading the information here.\nThe first step is to load the following libraries:\nlibrary(readxl)\nlibrary(tidyverse)"
+  },
+  {
+    "objectID": "REPO_rate.html#load-data",
+    "href": "REPO_rate.html#load-data",
+    "title": "REPO_rate",
+    "section": "Load data",
+    "text": "Load data\nNow we can download the data:\n\ndata = read_excel(\"data.xlsx\")\n\ndata\n\n# A tibble: 9,552 × 2\n   Fecha                Tasa\n   &lt;dttm&gt;              &lt;dbl&gt;\n 1 1999-01-01 00:00:00    26\n 2 1999-01-02 00:00:00    26\n 3 1999-01-03 00:00:00    26\n 4 1999-01-04 00:00:00    26\n 5 1999-01-05 00:00:00    26\n 6 1999-01-06 00:00:00    26\n 7 1999-01-07 00:00:00    26\n 8 1999-01-08 00:00:00    26\n 9 1999-01-09 00:00:00    26\n10 1999-01-10 00:00:00    26\n# ℹ 9,542 more rows"
+  },
+  {
+    "objectID": "REPO_rate.html#transformation",
+    "href": "REPO_rate.html#transformation",
+    "title": "REPO_rate",
+    "section": "Transformation",
+    "text": "Transformation\nNow we transform the date column with the function as.Date:\n\ndata$Fecha =  as.Date(data$Fecha)\n\ndata\n\n# A tibble: 9,552 × 2\n   Fecha       Tasa\n   &lt;date&gt;     &lt;dbl&gt;\n 1 1999-01-01    26\n 2 1999-01-02    26\n 3 1999-01-03    26\n 4 1999-01-04    26\n 5 1999-01-05    26\n 6 1999-01-06    26\n 7 1999-01-07    26\n 8 1999-01-08    26\n 9 1999-01-09    26\n10 1999-01-10    26\n# ℹ 9,542 more rows\n\n\nNow, we can create the new columns: year month and day, from the date variable with the lubridate library:\n\ndata$año = year(data$Fecha)\ndata$mes = month(data$Fecha)\ndata$dia = day(data$Fecha)\n\ndata\n\n# A tibble: 9,552 × 5\n   Fecha       Tasa   año   mes   dia\n   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;\n 1 1999-01-01    26  1999     1     1\n 2 1999-01-02    26  1999     1     2\n 3 1999-01-03    26  1999     1     3\n 4 1999-01-04    26  1999     1     4\n 5 1999-01-05    26  1999     1     5\n 6 1999-01-06    26  1999     1     6\n 7 1999-01-07    26  1999     1     7\n 8 1999-01-08    26  1999     1     8\n 9 1999-01-09    26  1999     1     9\n10 1999-01-10    26  1999     1    10\n# ℹ 9,542 more rows"
+  },
+  {
+    "objectID": "REPO_rate.html#filtering",
+    "href": "REPO_rate.html#filtering",
+    "title": "REPO_rate",
+    "section": "Filtering",
+    "text": "Filtering\nNow we can filter the database for the repo rate for the first month of every year starting from 2014:\n\ndata = data |&gt; \n  filter(año &gt;= 2014, dia == 1)\n\ndata\n\n# A tibble: 134 × 5\n   Fecha       Tasa   año   mes   dia\n   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;\n 1 2014-01-01  3.25  2014     1     1\n 2 2014-02-01  3.25  2014     2     1\n 3 2014-03-01  3.25  2014     3     1\n 4 2014-04-01  3.25  2014     4     1\n 5 2014-05-01  3.5   2014     5     1\n 6 2014-06-01  3.5   2014     6     1\n 7 2014-07-01  4     2014     7     1\n 8 2014-08-01  4.25  2014     8     1\n 9 2014-09-01  4.5   2014     9     1\n10 2014-10-01  4.5   2014    10     1\n# ℹ 124 more rows"
+  },
+  {
+    "objectID": "REPO_rate.html#graph",
+    "href": "REPO_rate.html#graph",
+    "title": "REPO_rate",
+    "section": "Graph",
+    "text": "Graph\n\nggplot(data) +\n  geom_step(aes(x=Fecha, y=Tasa), color=\"darkblue\") +\n  scale_x_date(date_breaks = \"1 year\", date_labels = \"%m-%Y\") +\n  scale_y_continuous(breaks = seq(0,14, by = 2)) +\n  theme_bw() +\n  labs(title = \"Tasa de intervención de política monetaria\",\n       subtitle = \"(periodicidad mensual)\",\n       x = \"Mes-Año\",\n       y = \"Tasa (%)\",\n       caption = \"Fuente: Elaboración propia con datos del Banco de la República, TIP\") +\n  theme(plot.caption.position = \"panel\",\n        plot.caption = element_text(hjust = 0))"
+  },
+  {
+    "objectID": "REPO_rate.html#conclusion",
+    "href": "REPO_rate.html#conclusion",
+    "title": "REPO_rate",
+    "section": "Conclusion",
+    "text": "Conclusion\nIn the previous graph we can see the latest monetary policy decisions by the Banco de la República regarding the REPO rate. Since the constitutional instruction is to maintain the purchasing power of the different agents of the economy, we can observe that the REPO rate escalated quite rapid in order to contain the raising inflation after the pandemic. It is worth mentioning that the latest minutes report discretion about reducing very quickly the interest rate levels, due to inflation expectations and external financing conditions."
+  }
+]
