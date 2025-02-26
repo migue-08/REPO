@@ -1,0 +1,92 @@
+---
+title: "REPO_rate"
+subtitle: "Banco de la República"
+author: "Miguel Martinez"
+date: today
+format: 
+  html:
+    toc: true
+    theme: cosmo
+editor: visual
+execute:
+  warning: false
+---
+
+The purpose of this document is to present the process of creating the plot that shows the evolution of the repo rate of the central bank of Colombia: [Banco de la República](https://www.banrep.gov.co/es). The information is made public by this institution and you can replicate this exercise downloading the information [here](https://suameca.banrep.gov.co/buscador-de-series/#/).
+
+The first step is to load the following libraries:
+
+```{r}
+
+library(readxl)
+library(tidyverse)
+```
+
+## Load data
+
+Now we can download the data:
+
+```{r}
+
+data = read_excel("data.xlsx")
+
+data
+```
+
+## Transformation
+
+Now we transform the date column with the function `as.Date`:
+
+```{r}
+
+data$Fecha =  as.Date(data$Fecha)
+
+data
+```
+
+Now, we can create the new columns: `year` `month` and `day`, from the `date` variable with the `lubridate` library:
+
+```{r}
+
+data$año = year(data$Fecha)
+data$mes = month(data$Fecha)
+data$dia = day(data$Fecha)
+
+data
+
+```
+
+## Filtering
+
+Now we can filter the database for the repo rate for the first month of every year starting from 2014:
+
+```{r}
+
+data = data |> 
+  filter(año >= 2014, dia == 1)
+
+data
+```
+
+## Graph
+
+```{r}
+
+ggplot(data) +
+  geom_step(aes(x=Fecha, y=Tasa), color="darkblue") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%m-%Y") +
+  scale_y_continuous(breaks = seq(0,14, by = 2)) +
+  theme_bw() +
+  labs(title = "Tasa de intervención de política monetaria",
+       subtitle = "(periodicidad mensual)",
+       x = "Mes-Año",
+       y = "Tasa (%)",
+       caption = "Fuente: Elaboración propia con datos del Banco de la República, TIP") +
+  theme(plot.caption.position = "panel",
+        plot.caption = element_text(hjust = 0))
+
+```
+
+## Conclusion
+
+In the previous graph we can see the latest monetary policy decisions by the Banco de la República regarding the REPO rate. Since the constitutional instruction is to maintain the purchasing power of the different agents of the economy, we can observe that the REPO rate escalated quite rapid in order to contain the raising inflation after the pandemic. It is worth mentioning that the latest [minutes](https://www.banrep.gov.co/es/noticias/minutas-banrep-enero-2025) report discretion about reducing very quickly the interest rate levels, due to inflation expectations and external financing conditions.
