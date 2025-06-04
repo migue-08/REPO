@@ -29,9 +29,22 @@ Now we can download the data:
 
 ```{r}
 
-data = read_excel("graficador_series.xlsx")
+data = readxl::read_excel("graficador_series.xlsx",
+                          sheet = "Datos",
+                          range = "A1:I9974",
+                          col_names = TRUE,
+                          na = "-")
 
-data
+```
+
+## Indexing
+
+```{r}
+
+# Let's omit the first row
+
+data = data[-c(1), ]
+
 ```
 
 ## Transformation
@@ -40,29 +53,38 @@ Now we transform the date column with the function `as.Date`:
 
 ```{r}
 
-data$Fecha =  as.Date(data$Fecha, 
-                      format = "%d/%m/%Y")
+data = data |> 
+  dplyr::mutate(
+    Fecha = as.Date(Fecha, format = "%d/%m/%Y"))
 
-data
 ```
 
 Now, we can create the new columns: `year` `month` and `day`, from the `date` variable with the `lubridate` library:
 
 ```{r}
 
-data$año = year(data$Fecha)
-data$mes = month(data$Fecha)
-data$dia = day(data$Fecha)
+data$año = lubridate::year(data$Fecha)
+data$mes = lubridate::month(data$Fecha)
+data$dia = lubridate::day(data$Fecha)
 
-data
+glimpse(data)
 
 ```
 
 ```{r}
 
-# Converting 'Tasa' to double format
+# Converting Tasa diaria to 'double' format replacing "," -> "."
 
-data$`Tasa de política monetaria(Dato diario)` = as.numeric(gsub(',', '.', data$`Tasa de política monetaria(Dato diario)`))
+data = data |>
+  dplyr::select(Fecha, año,
+                mes, dia,
+                `Tasa de política monetaria(Dato diario)`) |> 
+  dplyr::mutate(
+    `Tasa de política monetaria(Dato diario)` = 
+      as.numeric(str_replace_all(
+        string = `Tasa de política monetaria(Dato diario)`,
+        pattern = ",",
+        replacement = ".")))
 
 data
 ```
@@ -74,22 +96,22 @@ Now we can filter the database for the repo rate for the first month of every ye
 ```{r}
 
 data = data |> 
-  filter(año >= 2014)
+  filter(año >= 2015)
 
-data
 ```
 
 ## Graph
 
 ```{r}
 
-ggplot(data) +
-  geom_step(aes(x=Fecha, y=`Tasa de política monetaria(Dato diario)`), color="darkblue") +
+data |> 
+ggplot(aes(x=Fecha, y=`Tasa de política monetaria(Dato diario)`)) +
+  geom_step(color="darkblue") +
   scale_x_date(date_breaks = "1 year", date_labels = "%m-%Y") +
   scale_y_continuous(breaks = seq(0,14, by = 2)) +
   theme_bw() +
   labs(title = "Tasa de intervención de política monetaria",
-       subtitle = "(periodicidad mensual)",
+       subtitle = "(periodicidad diaria)",
        x = "Mes-Año",
        y = "Tasa (%)",
        caption = "Fuente: Elaboración propia con datos del Banco de la República, TIP") +
