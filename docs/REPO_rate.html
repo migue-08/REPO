@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.31">
+<meta name="generator" content="quarto-1.7.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Miguel Martinez">
-<meta name="dcterms.date" content="2025-06-04">
+<meta name="dcterms.date" content="2025-11-09">
 
 <title>Policy rate</title>
 <style>
@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
@@ -151,7 +151,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 4, 2025</p>
+      <p class="date">November 9, 2025</p>
     </div>
   </div>
   
@@ -163,22 +163,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The purpose of this document is to present the process of creating the plot that shows the evolution of the repo rate of the central bank of Colombia: <a href="https://www.banrep.gov.co/es">Banco de la República</a>. The information is made public by this institution and you can replicate this exercise downloading the information <a href="https://suameca.banrep.gov.co/buscador-de-series/#/">here</a>.</p>
+<p>This R document presents the process for loading, munging and plotting the evolution of the daily daily-frequency of the policy rate of the Central Bank of Colombia, <a href="https://www.banrep.gov.co/es">Banco de la República</a>. The information is published by Banrep and you can download it <a href="https://suameca.banrep.gov.co/buscador-de-series/#/">here</a>.</p>
 <p>The first step is to load the following libraries:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="load-data" class="level2">
 <h2 class="anchored" data-anchor-id="load-data">Load data</h2>
-<p>Now we can download the data:</p>
+<p>Now we can load the data:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="st">"graficador_series.xlsx"</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">sheet =</span> <span class="st">"Datos"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">range =</span> <span class="st">"A1:I9974"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">col_names =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">na =</span> <span class="st">"-"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="st">"graficador_series.xlsx"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">sheet =</span> <span class="st">"Datos"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">range =</span> <span class="st">"A1:I10133"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">col_names =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                          <span class="at">na =</span> <span class="st">"-"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                          <span class="at">.name_repair =</span> make_clean_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="indexing" class="level2">
@@ -191,93 +197,101 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="transformation" class="level2">
 <h2 class="anchored" data-anchor-id="transformation">Transformation</h2>
-<p>Now we transform the date column with the function <code>as.Date</code>:</p>
+<p>Now we transform the date column with <code>as.Date</code>function:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> data <span class="sc">|&gt;</span> </span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Fecha =</span> <span class="fu">as.Date</span>(Fecha, <span class="at">format =</span> <span class="st">"%d/%m/%Y"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parsing to date</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">fecha =</span> <span class="fu">as.Date</span>(fecha, <span class="at">format =</span> <span class="st">"%d/%m/%Y"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Now, we can create the new columns: <code>year</code> <code>month</code> and <code>day</code>, from the <code>date</code> variable with the <code>lubridate</code> library:</p>
+<p>Now, we can create the new columns: <code>year</code> <code>month</code> and <code>day</code>, from the <code>date</code> variable with the <code>lubridate</code> functions:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>año <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">year</span>(data<span class="sc">$</span>Fecha)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>mes <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">month</span>(data<span class="sc">$</span>Fecha)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>dia <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">day</span>(data<span class="sc">$</span>Fecha)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract information</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>año <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">year</span>(data<span class="sc">$</span>fecha)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>mes <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">month</span>(data<span class="sc">$</span>fecha)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>dia <span class="ot">=</span> lubridate<span class="sc">::</span><span class="fu">day</span>(data<span class="sc">$</span>fecha)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Rows: 9,972
+<pre><code>Rows: 10,131
 Columns: 12
-$ Fecha                                               &lt;date&gt; 1998-02-13, 1998-…
-$ `Tasa de política monetaria(Dato diario)`           &lt;chr&gt; "27,00", "27,00", …
-$ `Tasa de política monetaria(Dato fin de semana)`    &lt;chr&gt; NA, "27,00", "27,0…
-$ `Tasa de política monetaria(Dato mes)`              &lt;chr&gt; NA, NA, "27,00", N…
-$ `Tasa de política monetaria(Dato fin de mes)`       &lt;chr&gt; NA, NA, NA, NA, NA…
-$ `Tasa de política monetaria(Dato fin de trimestre)` &lt;chr&gt; NA, NA, NA, NA, NA…
-$ `Tasa de política monetaria(Dato fin de semestre)`  &lt;chr&gt; NA, NA, NA, NA, NA…
-$ `Tasa de política monetaria(Dato fin de año)`       &lt;chr&gt; NA, NA, NA, NA, NA…
-$ `Tasa de política monetaria(Dato semanal)`          &lt;chr&gt; "27,00", NA, NA, N…
-$ año                                                 &lt;dbl&gt; 1998, 1998, 1998, …
-$ mes                                                 &lt;dbl&gt; 2, 2, 2, 2, 2, 2, …
-$ dia                                                 &lt;int&gt; 13, 14, 15, 16, 17…</code></pre>
+$ fecha                                            &lt;date&gt; 1998-02-13, 1998-02-…
+$ tasa_de_politica_monetaria_dato_diario           &lt;chr&gt; "27,00", "27,00", "27…
+$ tasa_de_politica_monetaria_dato_fin_de_semana    &lt;chr&gt; NA, "27,00", "27,00",…
+$ tasa_de_politica_monetaria_dato_mes              &lt;chr&gt; NA, NA, "27,00", NA, …
+$ tasa_de_politica_monetaria_dato_fin_de_mes       &lt;chr&gt; NA, NA, NA, NA, NA, N…
+$ tasa_de_politica_monetaria_dato_fin_de_trimestre &lt;chr&gt; NA, NA, NA, NA, NA, N…
+$ tasa_de_politica_monetaria_dato_fin_de_semestre  &lt;chr&gt; NA, NA, NA, NA, NA, N…
+$ tasa_de_politica_monetaria_dato_fin_de_ano       &lt;chr&gt; NA, NA, NA, NA, NA, N…
+$ tasa_de_politica_monetaria_dato_semanal          &lt;chr&gt; "27,00", NA, NA, NA, …
+$ año                                              &lt;dbl&gt; 1998, 1998, 1998, 199…
+$ mes                                              &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 2, …
+$ dia                                              &lt;int&gt; 13, 14, 15, 16, 17, 1…</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Converting Tasa diaria to 'double' format replacing "," -&gt; "."</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> data <span class="sc">|&gt;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Fecha, año,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(fecha, año,</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                mes, dia,</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">Tasa de política monetaria(Dato diario)</span><span class="st">`</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                tasa_de_politica_monetaria_dato_diario) <span class="sc">|&gt;</span> </span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Tasa de política monetaria(Dato diario)</span><span class="st">`</span> <span class="ot">=</span> </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">tasa_de_politica_monetaria_dato_diario =</span> </span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>(<span class="fu">str_replace_all</span>(</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">string =</span> <span class="st">`</span><span class="at">Tasa de política monetaria(Dato diario)</span><span class="st">`</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">string =</span> tasa_de_politica_monetaria_dato_diario,</span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">pattern =</span> <span class="st">","</span>,</span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">replacement =</span> <span class="st">"."</span>)))</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 9,972 × 5
-   Fecha        año   mes   dia `Tasa de política monetaria(Dato diario)`
-   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;                                     &lt;dbl&gt;
- 1 1998-02-13  1998     2    13                                        27
- 2 1998-02-14  1998     2    14                                        27
- 3 1998-02-15  1998     2    15                                        27
- 4 1998-02-16  1998     2    16                                        30
- 5 1998-02-17  1998     2    17                                        30
- 6 1998-02-18  1998     2    18                                        30
- 7 1998-02-19  1998     2    19                                        30
- 8 1998-02-20  1998     2    20                                        30
- 9 1998-02-21  1998     2    21                                        30
-10 1998-02-22  1998     2    22                                        30
-# ℹ 9,962 more rows</code></pre>
+<pre><code># A tibble: 10,131 × 5
+   fecha        año   mes   dia tasa_de_politica_monetaria_dato_diario
+   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;                                  &lt;dbl&gt;
+ 1 1998-02-13  1998     2    13                                     27
+ 2 1998-02-14  1998     2    14                                     27
+ 3 1998-02-15  1998     2    15                                     27
+ 4 1998-02-16  1998     2    16                                     30
+ 5 1998-02-17  1998     2    17                                     30
+ 6 1998-02-18  1998     2    18                                     30
+ 7 1998-02-19  1998     2    19                                     30
+ 8 1998-02-20  1998     2    20                                     30
+ 9 1998-02-21  1998     2    21                                     30
+10 1998-02-22  1998     2    22                                     30
+# ℹ 10,121 more rows</code></pre>
 </div>
 </div>
 </section>
 <section id="filtering" class="level2">
 <h2 class="anchored" data-anchor-id="filtering">Filtering</h2>
-<p>Now we can filter the database for the repo rate for the first month of every year starting from 2014:</p>
+<p>Now we can filter the database for the first month of every year starting from 2015:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> data <span class="sc">|&gt;</span> </span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(año <span class="sc">&gt;=</span> <span class="dv">2015</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter the data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(año <span class="sc">&gt;=</span> <span class="dv">2015</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="graph" class="level2">
 <h2 class="anchored" data-anchor-id="graph">Graph</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Fecha, <span class="at">y=</span><span class="st">`</span><span class="at">Tasa de política monetaria(Dato diario)</span><span class="st">`</span>)) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_step</span>(<span class="at">color=</span><span class="st">"darkblue"</span>) <span class="sc">+</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(<span class="at">date_breaks =</span> <span class="st">"1 year"</span>, <span class="at">date_labels =</span> <span class="st">"%m-%Y"</span>) <span class="sc">+</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">14</span>, <span class="at">by =</span> <span class="dv">2</span>)) <span class="sc">+</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Tasa de intervención de política monetaria"</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"(periodicidad diaria)"</span>,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Mes-Año"</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Tasa (%)"</span>,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Fuente: Elaboración propia con datos del Banco de la República, TIP"</span>) <span class="sc">+</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.caption.position =</span> <span class="st">"panel"</span>,</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the plot</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>fecha, <span class="at">y=</span>tasa_de_politica_monetaria_dato_diario)) <span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_step</span>(<span class="at">color=</span><span class="st">"darkblue"</span>) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(<span class="at">date_breaks =</span> <span class="st">"1 year"</span>, <span class="at">date_labels =</span> <span class="st">"%m-%Y"</span>) <span class="sc">+</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">14</span>, <span class="at">by =</span> <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Tasa de intervención de política monetaria"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"(periodicidad diaria)"</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Mes-Año"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Tasa (%)"</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Fuente: Elaboración propia con datos del Banco de la República, TIP"</span>) <span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.caption.position =</span> <span class="st">"panel"</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -289,7 +303,7 @@ $ dia                                                 &lt;int&gt; 13, 14, 15, 16
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>In the previous graph we can see the latest monetary policy decisions by the Banco de la República regarding the REPO rate. Since the constitutional instruction is to maintain the purchasing power of the different agents of the economy and the inflation expectations anchored to a interval, we can observe that the REPO rate escalated quite rapid in order to contain the raising inflation after the pandemic. It is worth mentioning that the latest <a href="https://www.banrep.gov.co/es/noticias/minutas-banrep-abril-2025">minutes</a> report discretion about reducing very quickly the interest rate levels, due to inflation expectations and external financing conditions.</p>
+<p>In the previous graph we can see the latest monetary policy decisions by the Banco de la República regarding the REPO rate. Since the constitutional instruction is to maintain the purchasing power of the different agents of the economy and the inflation expectations anchored to an interval, we can observe that the REPO rate was reduced to get resources to finance the pandemic, and then quickly escalated in order to contain the raising inflation after the pandemic. It is worth mentioning that the <a href="https://www.banrep.gov.co/es/noticias/minutas-banrep-octubre-2025">latest minutes</a> report discretion about reducing very quickly the interest rate levels, due to inflation levels, inflation expectations and external financing conditions.</p>
 
 
 </section>
